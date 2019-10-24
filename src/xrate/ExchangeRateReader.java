@@ -1,5 +1,9 @@
 package xrate;
 
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import jdk.nashorn.internal.parser.JSONParser;
+
 import java.io.*;
 import java.net.URL;
 import java.util.Properties;
@@ -10,6 +14,8 @@ import java.util.Properties;
 public class ExchangeRateReader {
 
     private String accessKey;
+    private String urlString;
+    private URL url;
 
     /**
      * Construct an exchange rate reader using the given base URL. All requests
@@ -29,7 +35,8 @@ public class ExchangeRateReader {
          * the two methods below. All you need to do here is store the
          * provided `baseURL` in a field so it will be accessible later.
          */
-
+        urlString = baseURL;
+        url = new URL(urlString);
         // TODO Your code here
 
         // Reads the access keys from `etc/access_keys.properties`
@@ -84,8 +91,29 @@ public class ExchangeRateReader {
     public float getExchangeRate(String currencyCode, int year, int month, int day) throws IOException {
         // TODO Your code here
 
-        // Remove the next line when you've implemented this method.
-        throw new UnsupportedOperationException();
+        String strmonth;
+
+        if (Integer.toString(month).length() == 1) {
+            strmonth = "0" + month;
+        } else {
+            strmonth = Integer.toString(month);
+        }
+
+        String strday;
+
+        if (Integer.toString(day).length() == 1) {
+            strday = "0" + day;
+        } else {
+            strday = Integer.toString(day);
+        }
+
+
+        String tempurlstring = (urlString + year + "-" + strmonth + "-" + strday + "?access_key=" + accessKey);
+        JsonObject rateJSON = returnJSON(tempurlstring);
+
+        JsonObject rates = rateJSON.getAsJsonObject("rates");
+        float rate = rates.get(currencyCode).getAsFloat();
+        return rate;
     }
 
     /**
@@ -110,7 +138,45 @@ public class ExchangeRateReader {
             int year, int month, int day) throws IOException {
         // TODO Your code here
 
-        // Remove the next line when you've implemented this method.
-        throw new UnsupportedOperationException();
+        String strmonth;
+
+        if (Integer.toString(month).length() == 1) {
+            strmonth = "0" + month;
+        } else {
+            strmonth = Integer.toString(month);
+        }
+
+        String strday;
+
+        if (Integer.toString(day).length() == 1) {
+            strday = "0" + day;
+        } else {
+            strday = Integer.toString(day);
+        }
+
+
+
+
+        String tempurlstring = (urlString + year + "-" + strmonth + "-" + strday + "?access_key=" + accessKey);
+        JsonObject rateJSON = returnJSON(tempurlstring);
+
+
+        JsonObject rates = rateJSON.getAsJsonObject("rates");
+        float rate1 = rates.get(fromCurrency).getAsFloat();
+        float rate2 = rates.get(toCurrency).getAsFloat();
+        float ratefinal = rate1 / rate2;
+        return ratefinal;
     }
+
+    public JsonObject returnJSON(String tempurlstring) throws IOException{
+        URL tempurl = new URL(tempurlstring);
+        InputStream inputStream = tempurl.openStream();
+
+        InputStreamReader jsonreader = new InputStreamReader(inputStream);
+
+
+        JsonObject rateJSON = new JsonParser().parse(jsonreader).getAsJsonObject();
+        return rateJSON;
+    }
+
 }
